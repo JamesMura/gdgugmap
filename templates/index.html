@@ -21,7 +21,7 @@
 	<link rel="stylesheet" href="/css/base.css">
 	<link rel="stylesheet" href="/css/skeleton.css">
 	<link rel="stylesheet" href="/css/layout.css">
-
+<link rel="stylesheet" href="/css/prettify.css">
 	<!--[if lt IE 9]>
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 	<![endif]-->
@@ -32,16 +32,13 @@
 	<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
 	<link rel="apple-touch-icon" sizes="72x72" href="/images/apple-touch-icon-72x72.png">
 	<link rel="apple-touch-icon" sizes="114x114" href="/images/apple-touch-icon-114x114.png">
-
+<style type="text/css">
+      
+      #map { height: 400px;  }
+    </style>
 </head>
-<body>
+<body >
 
-
-
-	<!-- Primary Page Layout
-	================================================== -->
-
-	<!-- Delete everything in this .container and get started on your own site! -->
 
 	<div class="container">
 		<div class="sixteen columns">
@@ -53,7 +50,42 @@
 			</p>
 			<hr />
 		</div>
-		 
+		 <div class="sixteen columns">
+		 	<div class="six columns">
+		 		<div id="map">
+		 		Map
+		 	</div>
+		 	</div>
+		 	<div class="nine columns">
+		 		<p>
+		 			Latitude<input type="text" name="center_lat" placeholder="Center latitude" id="center_lat"> 
+		 			Longitude
+		 			<input type="text" name="center_lng" placeholder="Center longitude" id="center_lng">
+		 			<a href="#" class="button" id="set_center">Set Center</a>
+		 		</p>
+		 		<p>
+		 			Zoom <input type="text" id="zoom">
+		 			<a href="#" class="button" id="set_zoom">Set Zoom</a>
+		 		</p>
+		 		<p>
+		 			Marker Latitude
+		 			<input type="text" id="marker_lat" value="0.5">
+		 			Marker Longitude
+		 			<input type="text" id="marker_lng" value="32.49">
+		 			<a href="#" class="button" id="add_marker">Add Marker</a>
+		 		</p>
+		 		<p>
+		 			<a href="#" id="change_style">Change style</a>
+		 		</p>
+		 		<p>
+		 			Services : Geocoder
+		 			<input type="text" id="req">
+		 			<a href="#send" class="button" id="send">Send</a>
+		 			 <code class="prettyprint" id="req_result"></code>
+		 			 
+		 		</p>
+		 	</div>
+		 </div>
 		<div class="sixteen columns">
 			<hr />
 			<p class="two columns">
@@ -74,7 +106,127 @@ alt="Powered by Google App Engine" />
 			 
 			
 		</div>
+		<div class="sixteen columns">
+			<h2>
+				Links
+			</h2>
+			<a href="https://developers.google.com/maps/documentation/javascript/">Google Maps Api Documentation</a>
+			<a href="http://gmaps-samples-v3.googlecode.com/svn/trunk/styledmaps/wizard/index.html">Styled Maps Wizard</a>
+			<a href="http://gmap3.net/">GMAP 3</a>
+
+		</div>
 	</div><!-- container -->
+ 	<script type="text/javascript" src="/js/jquery-1.8.0.min.js"></script>
+ 	
+ 	<script type="text/javascript" src="/js/prettify.js"></script>
+
+    <script src="http://maps.google.com/maps/api/js?sensor=true" type="text/javascript">
+</script>
+<script type="text/javascript">
+	jQuery(document).ready(function() {
+			 
+			 var mapOptions = {
+    zoom: 10,
+    center: new google.maps.LatLng(0.5, 32.5),
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  };
+
+   window.map = new google.maps.Map(document.getElementById('map'),
+      mapOptions);
+   $("#zoom").val(map.getZoom()); 
+   $("#center_lat").val(map.getCenter().lat()); 
+   $("#center_lng").val(map.getCenter().lng()); 
+
+  
+
+  google.maps.event.addListener(map, 'center_changed', function() {
+   	$("#center_lat").val(map.getCenter().lat()); 
+   	 $("#center_lng").val(map.getCenter().lng()); 
+  });
+  google.maps.event.addListener(map, 'zoom_changed', function() {
+   	$("#zoom").val(map.getZoom()); 
+   	 
+  });
+ google.maps.event.addListener(map, 'click', function(event) {
+    console.log(event);
+   	 var marker = new google.maps.Marker({
+    position:  event.latLng,
+    map: map,
+    title: 'Click '
+  });
+  });
+   
+
+  $("#set_center").click(function(){
+  	map.setCenter(new google.maps.LatLng($("#center_lat").val(), $("#center_lng").val()));
+  });
+  $("#set_zoom").click(function(){
+  	map.setZoom(eval($("#zoom").val()));
+  });
+
+   $("#add_marker").click(function(){
+  	var marker = new google.maps.Marker({
+    position: new google.maps.LatLng(
+    	$("#marker_lat").val(), 
+    	$("#marker_lng").val()
+    	) ,
+    map: map,
+    title: 'Click '
+  		});
+
+  	var infowindow = new google.maps.InfoWindow({
+    content: " Wassup "
+	});
+  	google.maps.event.addListener(marker, 'click', function() {
+  	infowindow.open(map,marker);
+	});
+
+  });
+
+$("#change_style").click(function(){
+	var styles = [
+  {
+    stylers: [
+      { hue: "#00ffe6" },
+      { saturation: -20 }
+    ]
+  },{
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [
+      { lightness: 100 },
+      { visibility: "simplified" }
+    ]
+  },{
+    featureType: "road",
+    elementType: "labels",
+    stylers: [
+      { visibility: "off" }
+    ]
+  }
+];
+
+map.setOptions({styles: styles});
+});
+$("#send").click(function(){
+	console.log("send");
+	geocoder = new google.maps.Geocoder();
+	address =$("#req").val();
+	geocoder.geocode( { 'address': address}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+      	console.log(results);
+         $("#req_result").html(JSON.stringify(results));
+         prettyPrint();
+      } else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }
+    });
+
+});
+	  });
+			
+        
+</script>
 <script type="text/javascript">
   (function() {
     var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
